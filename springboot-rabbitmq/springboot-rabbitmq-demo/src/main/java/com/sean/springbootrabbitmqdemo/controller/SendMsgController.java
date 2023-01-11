@@ -23,10 +23,24 @@ import java.util.Date;
 public class SendMsgController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    @GetMapping("/sendMsg/{message}")
+    @GetMapping("sendMsg/{message}")
     public void  sendMsg(@PathVariable String message){
         log.info("current time: {}, send a message to two ttl queue:{}", new Date().toString(),message);
         rabbitTemplate.convertAndSend("X", "XA", "message from ttl 10s queue: " + message);
         rabbitTemplate.convertAndSend("X", "XB", "message from ttl 40s queue: " + message);
     }
+    //开始发消息 和 ttl
+    @GetMapping("sendExpirationMsg/{message}/{ttlTime}")
+    public void sendMsg(@PathVariable String message, @PathVariable String ttlTime){
+
+        rabbitTemplate.convertAndSend("X", "XC", message, msg ->{
+            msg.getMessageProperties().setExpiration(ttlTime);
+            return msg;
+        });
+        log.info("current time: {}, send a message with ttl {} ms,  to queue QC:{}", new Date().toString(),ttlTime,message);
+    }
+
+    //开始发布确认 测试确认
+
+
 }
